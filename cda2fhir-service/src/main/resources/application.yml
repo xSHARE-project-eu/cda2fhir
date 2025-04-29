@@ -1,0 +1,17 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /cda2fhir
+
+spring:
+  application:
+    name: cda2fhir-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
