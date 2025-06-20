@@ -120,8 +120,7 @@ public class Cda2FhirTransformer {
     try {
       FhirContext fhirContext = FhirContext.forR4Cached();
       String mxdeString = mxdeTransform(cda);
-      IParser jsonParser =
-          fhirContext.newJsonParser().setOverrideResourceIdWithBundleEntryFullUrl(true);
+      IParser jsonParser = fhirContext.newJsonParser();
       Bundle mxdeBundle = jsonParser.parseResource(Bundle.class, mxdeString);
 
       MyIpsGenerator myIpsGenerator = new MyIpsGenerator(fhirContext, mxdeBundle);
@@ -220,8 +219,7 @@ public class Cda2FhirTransformer {
 
   private List<Map<String, Object>> getEntries(Bundle fhirBundle) {
     FhirContext fhirContext = FhirContext.forR4Cached();
-    IParser jsonParser =
-        fhirContext.newJsonParser().setOverrideResourceIdWithBundleEntryFullUrl(false);
+    IParser jsonParser = fhirContext.newJsonParser();
 
     List<Map<String, Object>> resourceEntries = new ArrayList<>();
 
@@ -480,8 +478,7 @@ public class Cda2FhirTransformer {
   private Bundle parseJsonToBundle(String jsonString) {
 
     FhirContext fhirContext = FhirContext.forR4Cached();
-    IParser jsonParser =
-        fhirContext.newJsonParser().setOverrideResourceIdWithBundleEntryFullUrl(false);
+    IParser jsonParser = fhirContext.newJsonParser();
 
     return jsonParser.parseResource(Bundle.class, jsonString);
   }
