@@ -1,4 +1,3 @@
-<#escape x as x?json_string>
     <#assign comma = false>
     <#list cda.getComponent().getStructuredBody().getComponents() as component>
         <#if component.getSection()?has_content && component.getSection().getCode().getCode() == "10160-0">
@@ -6,28 +5,47 @@
                 <#if entry.getSubstanceAdministration()?has_content>
                     <#if comma>,</#if>
                     <#assign comma = true>
+                    <#assign medicationuuid=uuid.generate()>
+
                     {
+                    "fullUrl": "urn:uuid:${medicationuuid}",
                     "resource": {
                     "resourceType": "MedicationStatement",
-                    "id": "${uuid.generate()}",
-                    "identifier": [
-                    {
-                    "use": "official",
-                    "system": "urn:oid:${(entry.getSubstanceAdministration().getIds()[0].getExtension())!''}",
-                    "value": "${(entry.getSubstanceAdministration().getIds()[0].getRoot())!''}"
-                    }
-                    ],
-                    "status": "${(entry.getSubstanceAdministration().getStatusCode().getCode())!"active"}",
-                    "medicationReference": {
-                    "reference": "Medication/${uuid.generate()}"
-                    <#if (entry.getSubstanceAdministration().getConsumable().getManufacturedProduct().getManufacturedMaterial().getCode().getDisplayName())??>
-                        ,
-                        "display": "${entry.getSubstanceAdministration().getConsumable().getManufacturedProduct().getManufacturedMaterial().getCode().getDisplayName()!''}"
+                    "id": "${medicationuuid}",
+                    <#if (entry.getSubstanceAdministration().getIds())??>
+                        "identifier": [
+                        {
+                        "use": "official",
+                        <#if (entry.getSubstanceAdministration().getIds())?? && (entry.getSubstanceAdministration().getIds()[0].getExtension())??>
+                            "value": "${(entry.getSubstanceAdministration().getIds()[0].getExtension())!''}",
+                            "system": "urn:oid:${(entry.getSubstanceAdministration().getIds()[0].getRoot())!''}"
+                        <#else>
+                            "system":"urn:ietf:rfc:3986",
+                            "value":"urn:oid:${(entry.getSubstanceAdministration().getIds()[0].getRoot())!''}"
+                        </#if>
+                        }
+                        ],
                     </#if>
+                    "status": "${(entry.getSubstanceAdministration().getStatusCode().getCode())!"active"}",
+                    <#if entry.getSubstanceAdministration().getConsumable().getManufacturedProduct().getManufacturedMaterial().getCode().getCodeSystem() == "2.16.840.1.113883.6.1">
+                        <#assign system = "http://loinc.org">
+                    <#elseif entry.getSubstanceAdministration().getConsumable().getManufacturedProduct().getManufacturedMaterial().getCode().getCodeSystem() == "2.16.840.1.113883.6.96">
+                        <#assign system = "http://snomed.info/sct">
+                    <#else>
+                        <#assign system = "http://www.nlm.nih.gov/research/umls/rxnorm">
+                    </#if>
+                    "medicationCodeableConcept": {
+                    "coding": [
+                    {
+                    "system": "${system}",
+                    "code": "${entry.getSubstanceAdministration().getConsumable().getManufacturedProduct().getManufacturedMaterial().getCode().getCode()}",
+                    "display": "${entry.getSubstanceAdministration().getConsumable().getManufacturedProduct().getManufacturedMaterial().getCode().getDisplayName()}"
+                    }
+                    ]
                     },
                     "subject": {
-                    "reference": "Patient/${patientUuid}",
-                    "display": "ΜΑΡΙΑ ΔΗΜΟΥ"
+                    "reference": "urn:uuid:${patientUuid}",
+                    "display": "Patient"
                     },
                     <#if (entry.getSubstanceAdministration().getEffectiveTimes()[0].getValue())??>
                         "effectivePeriod": {
@@ -40,7 +58,7 @@
                         "timing": {
                         "repeat": {
                         <#if (entry.getSubstanceAdministration().getEffectiveTimes()[1].getPeriod().getValue()) ??>
-                            "period": "${(entry.getSubstanceAdministration().getEffectiveTimes()[1].getPeriod().getValue())!""}"
+                            "period": ${(entry.getSubstanceAdministration().getEffectiveTimes()[1].getPeriod().getValue())!""}
                         </#if>
                         <#if (entry.getSubstanceAdministration().getEffectiveTimes()[1].getPeriod().getUnit()) ??>
                             ,
@@ -55,7 +73,7 @@
                         {
                         "doseQuantity": {
                         <#if (entry.getSubstanceAdministration().getDoseQuantity().getValue())?? >
-                            "value": "${(entry.getSubstanceAdministration().getDoseQuantity().getValue())!""}",
+                            "value": ${(entry.getSubstanceAdministration().getDoseQuantity().getValue())!""},
                         </#if>
                         <#if (entry.getSubstanceAdministration().getDoseQuantity().getUnit())?? >
                             "unit": "${(entry.getSubstanceAdministration().getDoseQuantity().getUnit())!""}",
@@ -81,4 +99,3 @@
             <#global gcomma = true>
         </#if>
     </#list>
-</#escape>

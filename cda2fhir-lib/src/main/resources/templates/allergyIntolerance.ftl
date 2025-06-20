@@ -1,4 +1,3 @@
-<#escape x as x?jsonString>
     <#assign comma = false>
     [
     <#list cda.getComponent().getStructuredBody().getComponents() as component>
@@ -13,25 +12,43 @@
                             <#if observationEntry.getObservation()?hasContent>
                                 <#if comma>,</#if>
                                 <#assign comma = true>
+                                <#assign allergyuuid= uuid.generate()>
+
                                 {
+                                "fullUrl": "urn:uuid:${allergyuuid}",
                                 "resource": {
                                 "resourceType": "AllergyIntolerance",
-                                "id": "${uuid.generate()}",
+                                "id": "${allergyuuid}",
                                 "identifier": [
                                 {
                                 "use": "official",
-                                "system": "urn:oid:${(observationAct.getIds()[0].getExtension())!""}",
-                                "value": "${(observationAct.getIds()[0].getRoot())!""}"
+                                <#if observationAct.getIds()[0].getExtension()??>
+                                    "value": "${(observationAct.getIds()[0].getExtension())!''}",
+                                    "system": "urn:oid:${(observationAct.getIds()[0].getRoot())!''}"
+                                <#else>
+                                    "system":"urn:ietf:rfc:3986",
+                                    "value":"urn:oid:${(observationAct.getIds()[0].getRoot())!''}"
+                                </#if>
                                 }
                                 ]
                                 <#if (observationAct.getStatusCode().getCode())?? >
+                                    <#if observationAct.getStatusCode().getCode() == "completed">
+                                        <#assign mappedCode = "resolved">
+                                        <#assign mappedDisplay = "Resolved">
+                                    <#elseIf observationAct.getStatusCode().getCode() == "active">
+                                        <#assign mappedCode = "active">
+                                        <#assign mappedDisplay = "Active">
+                                    <#else>
+                                        <#assign mappedCode = observationAct.getStatusCode().getCode()>
+                                        <#assign mappedDisplay = observationAct.getStatusCode().getCode()>
+                                    </#if>
                                     ,
                                     "clinicalStatus": {
                                     "coding": [
                                     {
                                     "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
-                                    "code": "${observationAct.getStatusCode().getCode()}",
-                                    "display": "${observationAct.getStatusCode().getCode()}"
+                                    "code": "${mappedCode}",
+                                    "display": "${mappedDisplay}"
                                     }
                                     ]
                                     },
@@ -48,8 +65,8 @@
                                 ]
                                 },
                                 "patient": {
-                                "reference": "Patient/${patientUuid}",
-                                "display": "ΜΑΡΙΑ ΔΗΜΟΥ"
+                                "reference": "urn:uuid:${patientUuid}",
+                                "display": "Patient"
                                 },
                                 <#if (observationAct.getEffectiveTime().getLow().getValue())??>
                                     <#if observationAct.getEffectiveTime().getLow().getValue()?length == 8>
@@ -81,7 +98,7 @@
                                     "text": "${(observationAct.getParticipants()[0].getParticipantRole().getPlayingEntity().getCode().getOriginalText().getReference().getValue())!"No text"}"
                                     },
                                 </#if>
-                                <#if (observationEntry.getObservation().getValues()[0])??>
+                                <#if (observationEntry.getObservation().getValues()[0])?? && (observationEntry.getObservation().getValues()[0].getCode())??>
                                     "manifestation": [
                                     {
                                     "coding": [
@@ -119,4 +136,3 @@
     </#list>
     ]
     <#global gcomma = true>
-</#escape>

@@ -1,14 +1,19 @@
-<#escape x as x?json_string>
     <#assign assignedEntity = cda.getLegalAuthenticator().getAssignedEntity()>
     {
+    "fullUrl": "urn:uuid:${practitionerUuid}",
     "resource": {
     "resourceType": "Practitioner",
-    "id": "${uuid.generate()}",
+    "id": "${practitionerUuid}",
     "identifier": [
     {
     "use": "official",
-    "system": "urn:oid:${assignedEntity.getIds()[0].getExtension()}",
-    "value": "${assignedEntity.getIds()[0].getRoot()}"
+    <#if assignedEntity.getIds()[0].getExtension()??>
+        "value": "${(assignedEntity.getIds()[0].getExtension())!''}",
+        "system": "urn:oid:${(assignedEntity.getIds()[0].getRoot())!''}"
+    <#else>
+        "system":"urn:ietf:rfc:3986",
+        "value":"urn:oid:${(assignedEntity.getIds()[0].getRoot())!''}"
+    </#if>
     }
     ],
     "name": [
@@ -45,4 +50,3 @@
     }
     }
     <#global gcomma = true>
-</#escape>

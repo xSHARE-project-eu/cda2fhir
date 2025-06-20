@@ -1,4 +1,3 @@
-<#escape x as x?json_string>
     <#assign comma = false>
 
     <#list cda.getComponent().getStructuredBody().getComponents() as component>
@@ -9,20 +8,28 @@
                         <#if relationship.getObservation()?has_content>
                             <#if comma>,</#if>
                             <#assign comma = true>
+                            <#assign conditionuuid= uuid.generate()>
+
 
                             {
+                            "fullUrl": "urn:uuid:${conditionuuid}",
                             "resource": {
                             "resourceType": "Condition",
-                            "id": "${uuid.generate()}",
-                            "identifier": [
-                            {
-                            "use": "official",
-                            <#if (relationship.getObservation().getIds()[0].getExtension())?? >
-                                "system": "urn:oid:${(relationship.getObservation().getIds()[0].getExtension())!''}",
+                            "id": "${conditionuuid}",
+                            <#if relationship.getObservation().getIds()??>
+                                "identifier": [
+                                {
+                                "use": "official",
+                                <#if (relationship.getObservation().getIds())?? && (relationship.getObservation().getIds()[0].getExtension())??>
+                                    "value": "${(relationship.getObservation().getIds()[0].getExtension())!''}",
+                                    "system": "urn:oid:${(relationship.getObservation().getIds()[0].getRoot())!''}"
+                                <#else>
+                                    "system":"urn:ietf:rfc:3986",
+                                    "value":"urn:oid:${(relationship.getObservation().getIds()[0].getRoot())!''}"
+                                </#if>
+                                }
+                                ],
                             </#if>
-                            "value": "${(relationship.getObservation().getIds()[0].getRoot())!''}"
-                            }
-                            ],
                             "clinicalStatus": {
                             "coding": [
                             {
@@ -56,7 +63,14 @@
                             "coding": [
                             {
                             <#if (relationship.getObservation().getValues()[0].getCodeSystem())?? >
-                                "system": "${relationship.getObservation().getValues()[0].getCodeSystem()!''}"
+                                <#if relationship.getObservation().getValues()[0].getCodeSystem() == "2.16.840.1.113883.6.1">
+                                    <#assign system = "http://loinc.org">
+                                <#elseif relationship.getObservation().getValues()[0].getCodeSystem() == "1.3.6.1.4.1.12559.11.10.1.3.1.44.2">
+                                    <#assign system = "http://hl7.org/fhir/sid/icd-10">
+                                <#else>
+                                    <#assign system = "http://snomed.info/sct">
+                                </#if>
+                                "system": "${system}"
                             </#if>
                             <#if (relationship.getObservation().getValues()[0].getCode())?? >
                                 ,
@@ -70,8 +84,8 @@
                             ]
                             },
                             "subject": {
-                            "reference": "Patient/${patientUuid}",
-                            "display": "Maria Dimou"
+                            "reference": "urn:uuid:${patientUuid}",
+                            "display": "Patient"
                             }
                             },
                             "request": {
@@ -87,4 +101,3 @@
             </#list>
         </#if>
     </#list>
-</#escape>

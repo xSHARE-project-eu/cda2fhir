@@ -1,5 +1,7 @@
 package eu.project.xshare.cda2fhirlib;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import freemarker.template.Configuration;
@@ -11,6 +13,9 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Callable;
+import org.hl7.fhir.instance.model.api.IBaseBundle;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Resource;
 import org.openhealthtools.mdht.uml.cda.consol.ConsolPackage;
 import org.openhealthtools.mdht.uml.cda.consol.ContinuityOfCareDocument;
 import org.openhealthtools.mdht.uml.cda.util.CDAUtil;
@@ -18,15 +23,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The Cda2FhirTransformer class is responsible for transforming Clinical Document Architecture (CDA)
- * documents into Fast Healthcare Interoperability Resources (FHIR) International Patient Summary (IPS) format.
- * 
- * <p>This transformer uses Freemarker templates to process CDA documents and convert them into FHIR JSON format.
- * It extracts relevant information from the CDA document such as patient details, organization information,
- * and practitioner data, and maps them to the corresponding FHIR resources.</p>
- * 
+ * The Cda2FhirTransformer class is responsible for transforming Clinical Document Architecture
+ * (CDA) documents into Fast Healthcare Interoperability Resources (FHIR) International Patient
+ * Summary (IPS) format.
+ *
+ * <p>This transformer uses Freemarker templates to process CDA documents and convert them into FHIR
+ * JSON format. It extracts relevant information from the CDA document such as patient details,
+ * organization information, and practitioner data, and maps them to the corresponding FHIR
+ * resources.
+ *
  * <p>The transformation process involves parsing the CDA document, extracting necessary data,
- * applying Freemarker templates, and generating a properly formatted FHIR JSON output.</p>
+ * applying Freemarker templates, and generating a properly formatted FHIR JSON output.
  */
 public class Cda2FhirTransformer {
 
@@ -38,8 +45,8 @@ public class Cda2FhirTransformer {
 
   /**
    * Constructs a new Cda2FhirTransformer with the default Freemarker configuration.
-   * 
-   * <p>This constructor uses the default configuration provided by the FreemarkerConfigFactory.</p>
+   *
+   * <p>This constructor uses the default configuration provided by the FreemarkerConfigFactory.
    */
   public Cda2FhirTransformer() {
     this(FreemarkerConfigFactory.defaultConfiguration());
@@ -47,9 +54,9 @@ public class Cda2FhirTransformer {
 
   /**
    * Constructs a new Cda2FhirTransformer with a custom Freemarker configuration.
-   * 
-   * <p>This constructor allows for customization of the Freemarker configuration
-   * used for template processing during the transformation.</p>
+   *
+   * <p>This constructor allows for customization of the Freemarker configuration used for template
+   * processing during the transformation.
    *
    * @param freemarkerConfig the Freemarker configuration to use for template processing
    */
@@ -60,9 +67,9 @@ public class Cda2FhirTransformer {
 
   /**
    * Transforms a ContinuityOfCareDocument object into a FHIR IPS JSON string.
-   * 
-   * <p>This method takes a pre-parsed CDA document as input and transforms it into
-   * a FHIR IPS JSON string using Freemarker templates.</p>
+   *
+   * <p>This method takes a pre-parsed CDA document as input and transforms it into a FHIR IPS JSON
+   * string using Freemarker templates.
    *
    * @param cda the ContinuityOfCareDocument to transform
    * @return a formatted JSON string representing the FHIR IPS
@@ -70,7 +77,7 @@ public class Cda2FhirTransformer {
    */
   public String transformCdaToIps(ContinuityOfCareDocument cda) {
     try {
-      String result = transform(cda);
+      String result = transformToIps(cda);
       Object json = objectMapper.readValue(result, Object.class);
       return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
     } catch (JsonProcessingException e) {
@@ -80,9 +87,10 @@ public class Cda2FhirTransformer {
 
   /**
    * Transforms a CDA XML string into a FHIR IPS JSON string.
-   * 
-   * <p>This method takes a CDA document as an XML string, parses it into a ContinuityOfCareDocument,
-   * and then transforms it into a FHIR IPS JSON string using Freemarker templates.</p>
+   *
+   * <p>This method takes a CDA document as an XML string, parses it into a
+   * ContinuityOfCareDocument, and then transforms it into a FHIR IPS JSON string using Freemarker
+   * templates.
    *
    * @param cdaString the CDA XML string to transform
    * @return a formatted JSON string representing the FHIR IPS
@@ -97,7 +105,7 @@ public class Cda2FhirTransformer {
           (ContinuityOfCareDocument)
               CDAUtil.loadAs(inputStream, ConsolPackage.eINSTANCE.getContinuityOfCareDocument());
 
-      String result = transform(cda);
+      String result = transformToIps(cda);
       Object json = objectMapper.readValue(result, Object.class);
       return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
 
@@ -108,11 +116,48 @@ public class Cda2FhirTransformer {
     }
   }
 
+  public String transformToIps(ContinuityOfCareDocument cda) {
+    try {
+      FhirContext fhirContext = FhirContext.forR4Cached();
+      String mxdeString = mxdeTransform(cda);
+      IParser jsonParser =
+          fhirContext.newJsonParser().setOverrideResourceIdWithBundleEntryFullUrl(true);
+      Bundle mxdeBundle = jsonParser.parseResource(Bundle.class, mxdeString);
+
+      MyIpsGenerator myIpsGenerator = new MyIpsGenerator(fhirContext, mxdeBundle);
+
+      IBaseBundle ipsBundle = myIpsGenerator.generateIps();
+      return jsonParser.encodeResourceToString(ipsBundle);
+    } catch (Exception e) {
+      throw new InvalidCdaException(e.getMessage(), e);
+    }
+  }
+
+  public String mxdeTransform(ContinuityOfCareDocument cda) {
+
+    try {
+      String fhirBundleString = transform(cda);
+      Bundle fhirBundle = parseJsonToBundle(fhirBundleString);
+      String provenanceString = constructProvenance(fhirBundle);
+
+      Map<String, Object> dataModel = new HashMap<>();
+      dataModel.put("entries", getEntries(fhirBundle));
+      dataModel.put("provenance", provenanceString);
+
+      Template template = freemarkerConfig.getTemplate("mxde_bundle.ftl");
+      StringWriter writer = new StringWriter();
+      template.process(dataModel, writer);
+      return writer.toString();
+    } catch (Exception e) {
+      throw new InvalidCdaException(e.getMessage(), e);
+    }
+  }
+
   /**
    * Core transformation method that converts a CDA document to a FHIR JSON string.
-   * 
-   * <p>This method prepares a data model with the CDA document and additional information,
-   * then processes it through a Freemarker template to generate the FHIR JSON output.</p>
+   *
+   * <p>This method prepares a data model with the CDA document and additional information, then
+   * processes it through a Freemarker template to generate the FHIR JSON output.
    *
    * @param cda the ContinuityOfCareDocument to transform
    * @return a JSON string representing the FHIR bundle
@@ -133,6 +178,7 @@ public class Cda2FhirTransformer {
     Map<String, Object> dataModel = new HashMap<>();
     dataModel.put("cda", cda);
     dataModel.put("patientUuid", generatePatientUuid());
+    dataModel.put("practitionerUuid", generatePatientUuid());
 
     addPatientAddress(dataModel, cda);
     addOrganizationAddress(dataModel, cda);
@@ -149,10 +195,22 @@ public class Cda2FhirTransformer {
     }
   }
 
+  public String constructProvenance(Bundle fhirBundle) throws Exception {
+    Map<String, Object> dataModel = new HashMap<>();
+    dataModel.put("fhirBundle", fhirBundle);
+
+    Template template = freemarkerConfig.getTemplate("provenance.ftl");
+    StringWriter writer = new StringWriter();
+    template.process(dataModel, writer);
+
+    Object json = objectMapper.readValue(writer.toString(), Object.class);
+    return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+  }
+
   /**
    * Generates a random UUID for the patient.
-   * 
-   * <p>This method creates a unique identifier for the patient in the FHIR bundle.</p>
+   *
+   * <p>This method creates a unique identifier for the patient in the FHIR bundle.
    *
    * @return a string representation of a random UUID
    */
@@ -160,12 +218,35 @@ public class Cda2FhirTransformer {
     return UUID.randomUUID().toString();
   }
 
+  private List<Map<String, Object>> getEntries(Bundle fhirBundle) {
+    FhirContext fhirContext = FhirContext.forR4Cached();
+    IParser jsonParser =
+        fhirContext.newJsonParser().setOverrideResourceIdWithBundleEntryFullUrl(false);
+
+    List<Map<String, Object>> resourceEntries = new ArrayList<>();
+
+    for (Bundle.BundleEntryComponent entry : fhirBundle.getEntry()) {
+      Resource resource = entry.getResource();
+
+      String resourceJson = jsonParser.encodeResourceToString(resource);
+
+      Map<String, Object> resourceEntry = new LinkedHashMap<>();
+      resourceEntry.put("fullUrl", entry.getFullUrl());
+      resourceEntry.put("resource", resourceJson);
+      resourceEntry.put("request", Map.of("url", resource.getResourceType().name()));
+
+      resourceEntries.add(resourceEntry);
+    }
+
+    return resourceEntries;
+  }
+
   /**
    * Extracts patient address information from the CDA document and adds it to the data model.
-   * 
-   * <p>This method safely extracts the patient's telecom, street address, city, postal code,
-   * and country from the CDA document and adds them to the data model for use in the FHIR
-   * transformation templates.</p>
+   *
+   * <p>This method safely extracts the patient's telecom, street address, city, postal code, and
+   * country from the CDA document and adds them to the data model for use in the FHIR
+   * transformation templates.
    *
    * @param dataModel the data model to populate with patient address information
    * @param cda the CDA document containing the patient information
@@ -247,11 +328,13 @@ public class Cda2FhirTransformer {
 
   /**
    * Extracts organization address information from the CDA document and adds it to the data model.
-   * 
-   * <p>This method safely extracts the organization's telecom, street address, city, and postal code
-   * from the CDA document and adds them to the data model for use in the FHIR transformation templates.</p>
-   * 
-   * <p>Note that the postal code is extracted from the patient's address rather than the organization's address.</p>
+   *
+   * <p>This method safely extracts the organization's telecom, street address, city, and postal
+   * code from the CDA document and adds them to the data model for use in the FHIR transformation
+   * templates.
+   *
+   * <p>Note that the postal code is extracted from the patient's address rather than the
+   * organization's address.
    *
    * @param dataModel the data model to populate with organization address information
    * @param cda the CDA document containing the organization information
@@ -318,10 +401,10 @@ public class Cda2FhirTransformer {
 
   /**
    * Extracts practitioner address information from the CDA document and adds it to the data model.
-   * 
-   * <p>This method safely extracts the practitioner's street address, city, and postal code
-   * from the legal authenticator in the CDA document and adds them to the data model for use
-   * in the FHIR transformation templates.</p>
+   *
+   * <p>This method safely extracts the practitioner's street address, city, and postal code from
+   * the legal authenticator in the CDA document and adds them to the data model for use in the FHIR
+   * transformation templates.
    *
    * @param dataModel the data model to populate with practitioner address information
    * @param cda the CDA document containing the practitioner information
@@ -375,10 +458,10 @@ public class Cda2FhirTransformer {
 
   /**
    * Safely retrieves a value using a provided getter function.
-   * 
-   * <p>This utility method attempts to retrieve a value using the provided getter function.
-   * If the getter function throws an exception (e.g., due to a null reference in the chain),
-   * the method logs the error and returns null instead of propagating the exception.</p>
+   *
+   * <p>This utility method attempts to retrieve a value using the provided getter function. If the
+   * getter function throws an exception (e.g., due to a null reference in the chain), the method
+   * logs the error and returns null instead of propagating the exception.
    *
    * @param <T> the type of the value to retrieve
    * @param getter a Callable that retrieves the desired value
@@ -392,5 +475,14 @@ public class Cda2FhirTransformer {
 
       return null;
     }
+  }
+
+  private Bundle parseJsonToBundle(String jsonString) {
+
+    FhirContext fhirContext = FhirContext.forR4Cached();
+    IParser jsonParser =
+        fhirContext.newJsonParser().setOverrideResourceIdWithBundleEntryFullUrl(false);
+
+    return jsonParser.parseResource(Bundle.class, jsonString);
   }
 }

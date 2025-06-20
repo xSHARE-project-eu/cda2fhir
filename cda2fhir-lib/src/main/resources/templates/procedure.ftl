@@ -3,21 +3,22 @@
 
         <#if component.getSection()?has_content && component.getSection().getCode().getCode() == "47519-4">
             <#list component.getSection().getEntries() as entry>
+                <#assign procedureUuid=uuid.generate()>
                 {
+                "fullUrl": "urn:uuid:${procedureUuid}",
                 "resource": {
                 "resourceType": "Procedure",
-                "id": "${uuid.generate()}",
+                "id": "${procedureUuid}",
                 <#if (component.getSection().getId())?? >
                     "identifier": [
                     {
-                    "use": "official"
-                    <#if (component.getSection().getId().getRoot())?? >
-                        ,
-                        "system": "urn:oid:${component.getSection().getId().getRoot()!""}"
-                    </#if>
-                    <#if (component.getSection().getId().getExtension())?? >
-                        ,
-                        "value": "${component.getSection().getId().getExtension()!""}"
+                    "use": "official",
+                    <#if component.getSection().getId().getExtension()??>
+                        "value": "${(component.getSection().getId().getExtension())!''}",
+                        "system": "urn:oid:${(component.getSection().getId().getRoot())!''}"
+                    <#else>
+                        "system":"urn:ietf:rfc:3986",
+                        "value":"urn:oid:${(component.getSection().getId().getRoot())!''}"
                     </#if>
                     }
                     ],
@@ -41,9 +42,21 @@
                     },
                 </#if>
                 "subject": {
-                "reference": "Patient/${patientUuid}",
-                "display": "Maria Dimou"
-                }
+                "reference": "urn:uuid:${patientUuid}",
+                "display": "Patient"
+                },
+                <#if (entry.getProcedure().getEffectiveTime().getLow().getValue())??>
+                    "performedString": ${entry.getProcedure().getEffectiveTime().getLow().getValue()}
+                <#else>
+                    "performedPeriod" : {
+                    "extension" : [
+                    {
+                    "url" : "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+                    "valueCode" : "unknown"
+                    }
+                    ]
+                    }
+                </#if>
                 },
                 "request": {
                 "method": "POST",

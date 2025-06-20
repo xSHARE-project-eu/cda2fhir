@@ -1,4 +1,3 @@
-<#escape x as x?jsonString>
     <#assign comma = false>
 
     <#list cda.getComponent().getStructuredBody().getComponents() as component>
@@ -8,23 +7,40 @@
                 <#if entry.getObservation()?hasContent>
                     <#if comma>,</#if>
                     <#assign comma = true>
+                    <#assign observationuuid=uuid.generate()>
                     {
+                    "fullUrl": "urn:uuid:${observationuuid}",
                     "resource": {
                     "resourceType": "Observation",
-                    "id": "${uuid.generate()}",
+                    "id": "${observationuuid}",
                     "status": "final",
+                    "category" : [
+                    {
+                    "coding" : [
+                    {
+                    "system" : "http://terminology.hl7.org/CodeSystem/observation-category",
+                    "code" : "laboratory"
+                    }
+                    ]
+                    }
+                    ],
                     "code": {
                     "coding": [
                     {
-                    "system": "${entry.getObservation().getCode().getCodeSystem()!''}",
+                    <#if entry.getObservation().getCode().getCodeSystem() == "2.16.840.1.113883.6.1">
+                        <#assign system = "http://loinc.org">
+                    <#else>
+                        <#assign system = "http://snomed.info/sct">
+                    </#if>
+                    "system": "${system}",
                     "code": "${entry.getObservation().getCode().getCode()!''}",
                     "display": "${entry.getObservation().getCode().getDisplayName()!''}"
                     }
                     ]
                     },
                     "subject": {
-                    "reference": "Patient/${patientUuid}",
-                    "display": "Maria Dimou"
+                    "reference": "urn:uuid:${patientUuid}",
+                    "display": "Patient"
                     }
                     <#if (entry.getObservation().getEffectiveTime().getLow().getValue())??>
                         <#if entry.getObservation().getEffectiveTime().getLow().getValue()?length == 8>
@@ -42,7 +58,7 @@
                     <#if (entry.getObservation().getValues()[0].getValue())??>
                         ,
                         "valueQuantity": {
-                        "value": "${(entry.getObservation().getValues()[0].getValue())!"Check if it is mandatory"}",
+                        "value": ${(entry.getObservation().getValues()[0].getValue())!0.0},
                         "unit": "${(entry.getObservation().getValues()[0].getUnit())!"Check if it is mandatory"}"
                         }
                         },
@@ -63,23 +79,41 @@
                         <#if component.getObservation()?hasContent>
                             <#if comma>,</#if>
                             <#assign comma = true>
+                            <#assign observationuuid=uuid.generate()>
+
                             {
+                            "fullUrl": "urn:uuid:${observationuuid}",
                             "resource": {
                             "resourceType": "Observation",
-                            "id": "${uuid.generate()}",
+                            "id": "${observationuuid}",
                             "status": "final",
+                            "category" : [
+                            {
+                            "coding" : [
+                            {
+                            "system" : "http://terminology.hl7.org/CodeSystem/observation-category",
+                            "code" : "vital-signs"
+                            }
+                            ]
+                            }
+                            ],
                             "code": {
                             "coding": [
                             {
-                            "system": "${component.getObservation().getCode().getCodeSystem()!''}",
+                            <#if component.getObservation().getCode().getCodeSystem() == "2.16.840.1.113883.6.1">
+                                <#assign system = "http://loinc.org">
+                            <#else>
+                                <#assign system = "http://snomed.info/sct">
+                            </#if>
+                            "system": "${system}",
                             "code": "${component.getObservation().getCode().getCode()!''}",
                             "display": "${component.getObservation().getCode().getDisplayName()!''}"
                             }
                             ]
                             },
                             "subject": {
-                            "reference": "Patient/${patientUuid}",
-                            "display": "Maria Dimou"
+                            "reference": "urn:uuid:${patientUuid}",
+                            "display": "Patient"
                             }
                             <#if (component.getObservation().getEffectiveTime().getValue())??>
                                 <#if component.getObservation().getEffectiveTime().getValue()?length == 8>
@@ -97,7 +131,7 @@
                             <#if (component.getObservation().getValues()[0].getValue())??>
                                 ,
                                 "valueQuantity": {
-                                "value": "${(component.getObservation().getValues()[0].getValue())}",
+                                "value": ${(component.getObservation().getValues()[0].getValue())},
                                 "unit": "${(component.getObservation().getValues()[0].getUnit())}"
                                 }
                                 },
@@ -152,8 +186,6 @@
             <#--                    </#if>-->
             <#--                </#list>-->
             <#--            </#if>-->
-
             </#list>
         </#if>
     </#list>
-</#escape>

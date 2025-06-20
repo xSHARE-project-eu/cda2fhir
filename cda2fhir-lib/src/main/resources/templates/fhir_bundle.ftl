@@ -1,13 +1,10 @@
 <#escape x as x?json_string>
     {
     "resourceType": "Bundle",
+    "id": "${uuid.generate()}",
     "type": "transaction",
     "entry": [
     <#global gcomma = false>
-
-    <#if gcomma>,</#if>
-    <#global gcomma=false>
-    <#include "composition.ftl">
 
     <#if gcomma>,</#if>
     <#global gcomma=false>
@@ -37,9 +34,11 @@
     <#global gcomma=false>
     <#include "allergyIntolerance.ftl">
 
-    <#if gcomma>,</#if>
-    <#global gcomma=false>
-    <#include "practitioner.ftl">
+    <#if (cda.getLegalAuthenticator())?? && (cda.getLegalAuthenticator().getAssignedEntity())??>
+        <#if gcomma>,</#if>
+        <#global gcomma=false>
+        <#include "practitioner.ftl">
+    </#if>
     ]
     }
 </#escape>

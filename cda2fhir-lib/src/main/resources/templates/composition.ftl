@@ -1,8 +1,10 @@
 <#escape x as x?json_string>
+    <#assign compositionUuuid=uuid.generate()>
     {
+    "fullUrl": "urn:uuid:${compositionUuuid}",
     "resource": {
     "resourceType": "Composition",
-    "id": "${uuid.generate()}",
+    "id": "${compositionUuuid}",
     "type": {
     "coding": [
     {

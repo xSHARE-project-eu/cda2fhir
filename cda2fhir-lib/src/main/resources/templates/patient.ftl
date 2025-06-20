@@ -1,8 +1,8 @@
-<#escape x as x?json_string>
     <#assign recordTarget = cda.getRecordTargets()[0]>
     <#assign patient = recordTarget.getPatientRole().getPatient()>
     <#assign birthTime = patient.getBirthTime().getValue()>
     {
+    "fullUrl": "urn:uuid:${patientUuid}",
     "resource": {
     "resourceType": "Patient",
     "id": "${patientUuid}",
@@ -10,8 +10,13 @@
     <#list recordTarget.getPatientRole().getIds() as id>
         {
         "use": "official",
-        "system": "urn:oid:${id.getExtension()}",
-        "value": "${id.getRoot()}"
+        <#if id.getExtension()??>
+            "value": "${(id.getExtension())!''}",
+            "system": "urn:oid:${(id.getRoot())!''}"
+        <#else>
+            "system":"urn:ietf:rfc:3986",
+            "value":"urn:oid:${(id.getRoot())!''}"
+        </#if>
         }<#if id_has_next>,</#if>
     </#list>
     ],
@@ -23,13 +28,15 @@
     ]
     }
     ],
-    "telecom": [
-    {
-    "system": "phone",
-    "value": "${telecomPatient}",
-    "use": "home"
-    }
-    ],
+    <#if telecomPatient??>
+        "telecom": [
+        {
+        "system": "phone",
+        "value": "${telecomPatient}",
+        "use": "home"
+        }
+        ],
+    </#if>
     <#if patient.getAdministrativeGenderCode().getCode() == "F" >
         "gender": "female",
     </#if>
@@ -54,4 +61,3 @@
     }
     }
     <#global gcomma = true>
-</#escape>

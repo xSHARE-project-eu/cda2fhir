@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ClinicalDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:hl7-org:v3" xmlns:voc="urn:hl7-org:v3/voc" xmlns:sdtc="urn:hl7-org:sdtc">
+    <realmCode code="ES"/>
+    <typeId extension="POCD_HD000040" root="2.16.840.1.113883.1.3"/>
+    <templateId root="2.16.840.1.113883.10.22.1.1"/>
+    <id root="2.16.724.4.8.10.200.10" extension="PSCTD0160f274530a031"/>
+    <code displayName="Patient Summary" code="60591-5" codeSystem="2.16.840.1.113883.6.1"/>
+    <title>Patient Summary</title>
+    <effectiveTime value="20111113125600+0200"/>
+    <confidentialityCode code="N" displayName="normal" codeSystem="2.16.840.1.113883.5.25"/>
+    <languageCode code="es-ES"/>
+    <setId root="2.16.724.4.8.10.200.10" extension="PSCTD0160f274530a031S"/>
+    <versionNumber value="2"/>
+    <!-- include template 2.16.840.1.113883.10.22.2.1 'IPS CDA recordTarget' (dynamic) 1..1 M -->
+    <recordTarget>
+        <patientRole>
+            <id extension="123" root="1.2.3"/>
+            <!-- Additional ids can capture other MRNs or identifiers, such as social security number shown below -->
+            <addr use="HP">
+                <streetAddressLine>4525 Scott Ave</streetAddressLine>
+                <city>St. Louis</city>
+                <postalCode>63110</postalCode>
+                <state>MO</state>
+                <country>US</country>
+            </addr>
+            <telecom value="tel:+1 (314)555-1919" use="MC"/>
+            <patient>
+                <name use="L">
+                    <given>Charles</given>
+                    <family qualifier="SP">Merlot</family>
+                </name>
+                <administrativeGenderCode code="M" displayName="Male" codeSystem="2.16.840.1.113883.5.1" codeSystemName="AdministrativeGender"/>
+                <birthTime value="19660404"/>
+            </patient>
+        </patientRole>
+    </recordTarget>
+    <!-- include template 2.16.840.1.113883.10.22.2.2 'IPS CDA author' (dynamic) 1..* M -->
+    <author>
+        <time value="20210415103026-0500"/>
+        <assignedAuthor>
+            <id extension="eumfh-43-155-1" root="1.1.1.9.9.9"/>
+            <assignedPerson>
+                <name>
+                    <given>Marie</given>
+                    <family>Pinot</family>
+                    <suffix qualifier="AC">M.D.</suffix>
+                </name>
+            </assignedPerson>
+        </assignedAuthor>
+    </author>
+    <!-- include template 2.16.840.1.113883.10.22.2.3 'IPS CDA custodian' (dynamic) 1..1 M -->
+    <custodian>
+        <assignedCustodian>
+            <representedCustodianOrganization>
+                <id extension="WHO-CX" root="1.1.1.1.1.1.1.3"/>
+                <name>World Health Organization</name>
+            </representedCustodianOrganization>
+        </assignedCustodian>
+    </custodian>
+    <!-- include template 2.16.840.1.113883.10.22.2.4 'IPS CDA legalAuthenticator' (dynamic) 0..1 R -->
+    <!-- include template 2.16.840.1.113883.10.22.2.5 'IPS Patient Contacts' (dynamic) 0..* O -->
+    <!-- include template 2.16.840.1.113883.10.22.2.6 'IPS CDA documentationOf ' (dynamic) 1..1 M -->
+    <documentationOf>
+        <serviceEvent classCode="PCPR">
+            <effectiveTime>
+                <low value="20141001"/>
+                <high value="20141015103026-0500"/>
+            </effectiveTime>
+            <performer typeCode="PRF">
+                <functionCode code="PCP" displayName="Primary Care Provider" codeSystem="2.16.840.1.113883.5.88" codeSystemName="Participation Function">
+                    <originalText>Primary Care Provider</originalText>
+                </functionCode>
+                <assignedEntity>
+                    <id extension="999" root="1.2.3.4.1.2.3.4"/>
+                    <code code="207QA0505X" displayName="Adult Medicine" codeSystem="2.16.840.1.113883.6.101" codeSystemName="Healthcare Provider Taxonomy (HIPAA)"/>
+                    <assignedPerson>
+                        <name>
+                            <given>Marie</given>
+                            <family>Pinot</family>
+                        </name>
+                    </assignedPerson>
+                    <representedOrganization>
+                        <id extension="XXX-1" root="1.1.1.1.1.1.1.1"/>
+                        <name>Southwest Medical Practice</name>
+                    </representedOrganization>
+                </assignedEntity>
+            </performer>
+        </serviceEvent>
+    </documentationOf>
+    <!-- include template 2.16.840.1.113883.10.22.2.7 'IPS CDA relatedDocument' (dynamic) 0..* R -->
+    <component>
+        <structuredBody classCode="DOCBODY">
+            <component>
+                <!-- template 2.16.840.1.113883.10.22.3.1 'IPS Medication Summary Section' (dynamic) -->
+                <section classCode="DOCSECT">
+                    <templateId root="2.16.840.1.113883.10.22.3.1"/>
+                    <code code="10160-0" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="HISTORY OF MEDICATION USE"/>
+                    <title>MEDICATIONS</title>
+                    <text>
+                        <paragraph>rivaroxaban 20 mg oral tablet</paragraph>
+                    </text>
+                    <!-- 2.16.840.1.113883.6.73 is equivalent to http://www.whocc.no/atc -->
+                    <!-- 2.16.840.1.113883.6.96 is equivalent to http://snomed.info/sct  -->
+
+                    <entry>
+                        <substanceAdministration classCode="SBADM" moodCode="EVN">
+                            <templateId root="2.16.840.1.113883.10.22.4.4"/>
+                            <statusCode code="active"/>
+                            <consumable>
+                                <manufacturedProduct classCode="MANU">
+                                    <manufacturedMaterial>
+                                        <code code="704474000" codeSystem="2.16.840.1.113883.6.96"
+                                              displayName="rivaroxaban 20 mg oral tablet"/>
+                                    </manufacturedMaterial>
+                                </manufacturedProduct>
+                            </consumable>
+                        </substanceAdministration>
+                    </entry>
+
+
+                    <entry>
+                        <substanceAdministration classCode="SBADM" moodCode="EVN">
+                            <templateId root="2.16.840.1.113883.10.22.4.4"/>
+                            <statusCode code="active"/>
+                            <consumable>
+                                <manufacturedProduct classCode="MANU">
+                                    <manufacturedMaterial>
+                                        <code code="317971007" codeSystem="2.16.840.1.113883.6.96"
+                                              displayName="furosemide 20 mg oral tablet"/>
+                                    </manufacturedMaterial>
+                                </manufacturedProduct>
+                            </consumable>
+                        </substanceAdministration>
+                    </entry>
+
+
+                </section>
+            </component>
+
+            <component>
+                <!-- template 2.16.840.1.113883.10.22.3.2 'IPS Allergies and Intolerances Section' (dynamic) -->
+                <section classCode="DOCSECT">
+                    <templateId root="2.16.840.1.113883.10.22.3.2"/>
+                    <code code="48765-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="ALLERGIES AND ADVERSE REACTIONS"/>
+                    <title>ALLERGIES AND ADVERSE REACTIONS</title>
+                    <text>
+                        <paragraph>No Known Allergies</paragraph>
+                    </text>
+                    <!-- 2.16.840.1.113883.6.73 is equivalent to http://www.whocc.no/atc -->
+                    <!-- 2.16.840.1.113883.6.96 is equivalent to http://snomed.info/sct  -->
+
+                    <entry>
+                        <!-- Allergy Concern Act -->
+                        <act classCode="ACT" moodCode="EVN">
+                            <templateId root="2.16.840.1.113883.10.20.22.4.30"/>
+                            <templateId root="2.16.840.1.113883.10.20.22.4.30" extension="2015-08-01"/>
+                            <code code="CONC" codeSystem="2.16.840.1.113883.5.6"/>
+                            <text>No Known Allergies</text>
+                            <statusCode code="active"/>
+                            <entryRelationship typeCode="SUBJ">
+                                <!-- No Known Allergies -->
+                                <!-- The negationInd = true negates the observation/value -->
+                                <!-- The use of negationInd corresponds with the newer Observation.valueNegationInd -->
+                                <observation classCode="OBS" moodCode="EVN" negationInd="true">
+                                    <!-- allergy - intolerance observation template -->
+                                    <templateId root="2.16.840.1.113883.10.20.22.4.7"/>
+                                    <templateId root="2.16.840.1.113883.10.20.22.4.7" extension="2014-06-09"/>
+                                    <id root="4adc1020-7b14-11db-9fe1-0800200c9a66"/>
+                                    <code code="ASSERTION" codeSystem="2.16.840.1.113883.5.4"/>
+                                    <text>No Known Allergies</text>
+                                    <statusCode code="completed"/>
+                                    <effectiveTime>
+                                        <low nullFlavor="NI" />
+                                    </effectiveTime>
+                                    <value xsi:type="CD" code="419199007"
+                                           displayName="Allergy to substance (disorder)"
+                                           codeSystem="2.16.840.1.113883.6.96" codeSystemName="SNOMED CT"/>
+                                </observation>
+                            </entryRelationship>
+                        </act>
+                    </entry>
+
+
+
+                </section>
+            </component>
+
+            <component>
+                <!-- template 2.16.840.1.113883.10.22.3.3 'IPS Problems Section' (dynamic) -->
+                <section classCode="DOCSECT">
+                    <templateId root="2.16.840.1.113883.10.22.3.3"/>
+                    <code code="11450-4" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="PROBLEM LIST"/>
+                    <title>PROBLEM LIST</title>
+                    <text>
+                        <paragraph>Active Concerns</paragraph>
+                        <list>
+                            <item>[2013-03-05] - Valve disease</item>
+                            <item>[2008-03-01] - Previous DVT (Venous Femoral Thrombosis)</item>
+                        </list>
+                    </text>
+                    <!-- 2.16.840.1.113883.6.73 is equivalent to http://www.whocc.no/atc -->
+                    <!-- 2.16.840.1.113883.6.96 is equivalent to http://snomed.info/sct  -->
+
+                    <entry typeCode="DRIV">
+                        <act classCode="ACT" moodCode="EVN">
+                            <templateId root="2.16.840.1.113883.10.22.4.7"/>
+                            <code code="CONC" codeSystem="2.16.840.1.113883.5.6" displayName="Concern"/>
+                            <statusCode code="active"/>
+                            <effectiveTime>
+                                <low value="201810151520-0100"/>
+                            </effectiveTime>
+                            <entryRelationship typeCode="SUBJ">
+                                <observation classCode="OBS" moodCode="EVN">
+                                    <templateId root="2.16.840.1.113883.10.22.4.8"/>
+                                    <code code="64572001" codeSystem="2.16.840.1.113883.6.96" displayName="Condition"/>
+                                    <statusCode code="completed"/>
+                                    <effectiveTime>
+                                        <!-- The low value reflects the date of onset -->
+                                        <!-- Based on patient symptoms, presumed onset is 2013-03-05  -->
+                                        <low value="20130305"/>
+                                        <!-- The high value reflects when the problem was known to be resolved -->
+                                    </effectiveTime>
+                                    <value xsi:type="CD" code="368009" codeSystem="2.16.840.1.113883.6.96" displayName="Heart valve disorder"/>
+                                    <entryRelationship typeCode="REFR">
+                                        <observation classCode="OBS" moodCode="EVN">
+                                            <!-- Problem status observation V2 template -->
+                                            <templateId root="2.16.840.1.113883.10.20.22.4.6" extension="2014-06-09"/>
+                                            <code code="33999-4" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Status"/>
+                                            <statusCode code="completed"/>
+                                            <value xsi:type="CD" code="55561003" codeSystem="2.16.840.1.113883.6.96" displayName="Active" codeSystemName="SNOMED CT"/>
+                                        </observation>
+                                    </entryRelationship>
+                                </observation>
+                            </entryRelationship>
+                        </act>
+                    </entry>
+
+
+                    <entry typeCode="DRIV">
+                        <act classCode="ACT" moodCode="EVN">
+                            <templateId root="2.16.840.1.113883.10.22.4.7"/>
+                            <code code="CONC" codeSystem="2.16.840.1.113883.5.6" displayName="Concern"/>
+                            <statusCode code="active"/>
+                            <effectiveTime>
+                                <low value="201810151520-0100"/>
+                            </effectiveTime>
+                            <entryRelationship typeCode="SUBJ">
+                                <observation classCode="OBS" moodCode="EVN">
+                                    <templateId root="2.16.840.1.113883.10.22.4.8"/>
+                                    <code code="64572001" codeSystem="2.16.840.1.113883.6.96" displayName="Condition"/>
+                                    <statusCode code="completed"/>
+                                    <effectiveTime>
+                                        <!-- The low value reflects the date of onset -->
+                                        <!-- Based on patient symptoms, presumed onset is 2008-03-01  -->
+                                        <low value="20080301"/>
+                                        <!-- The high value reflects when the problem was known to be resolved -->
+                                    </effectiveTime>
+                                    <value xsi:type="CD" code="161508001" codeSystem="2.16.840.1.113883.6.96" displayName="Previous DVT (Venous Femoral Thrombosis)"/>
+                                    <entryRelationship typeCode="REFR">
+                                        <observation classCode="OBS" moodCode="EVN">
+                                            <!-- Problem status observation V2 template -->
+                                            <templateId root="2.16.840.1.113883.10.20.22.4.6" extension="2014-06-09"/>
+                                            <code code="33999-4" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Status"/>
+                                            <statusCode code="completed"/>
+                                            <value xsi:type="CD" code="55561003" codeSystem="2.16.840.1.113883.6.96" displayName="Active" codeSystemName="SNOMED CT"/>
+                                        </observation>
+                                    </entryRelationship>
+                                </observation>
+                            </entryRelationship>
+                        </act>
+                    </entry>
+
+
+                </section>
+            </component>
+
+
+
+
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.4 'IPS History of Procedures Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.5 'IPS Immunizations Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.6 'IPS Medical Devices Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.7 'IPS History of Past Illness Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.14 'IPS Results Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.8 'IPS Functional Status Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.9 'IPS Plan of Treatment Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.10 'IPS Social History Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.11 'IPS History of Pregnancy Section' (dynamic) -->
+
+
+            <!-- template 2.16.840.1.113883.10.22.3.12 'IPS Advance Directives Section' (dynamic) -->
+
+        </structuredBody>
+    </component>
+</ClinicalDocument>
