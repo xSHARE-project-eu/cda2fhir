@@ -2,8 +2,6 @@ package eu.project.xshare.cda2fhirlib;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import java.io.ByteArrayInputStream;
@@ -13,6 +11,7 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Callable;
+import lombok.SneakyThrows;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Resource;
@@ -41,7 +40,7 @@ public class Cda2FhirTransformer {
 
   private final Configuration freemarkerConfig;
 
-  private final ObjectMapper objectMapper;
+  private final FhirContext fhirContext = FhirContext.forR4Cached();
 
   /**
    * Constructs a new Cda2FhirTransformer with the default Freemarker configuration.
@@ -62,27 +61,6 @@ public class Cda2FhirTransformer {
    */
   public Cda2FhirTransformer(Configuration freemarkerConfig) {
     this.freemarkerConfig = freemarkerConfig;
-    objectMapper = new ObjectMapper();
-  }
-
-  /**
-   * Transforms a ContinuityOfCareDocument object into a FHIR IPS JSON string.
-   *
-   * <p>This method takes a pre-parsed CDA document as input and transforms it into a FHIR IPS JSON
-   * string using Freemarker templates.
-   *
-   * @param cda the ContinuityOfCareDocument to transform
-   * @return a formatted JSON string representing the FHIR IPS
-   * @throws TransformationException if there is an error during the transformation process
-   */
-  public String transformCdaToIps(ContinuityOfCareDocument cda) {
-    try {
-      String result = transformToIps(cda);
-      Object json = objectMapper.readValue(result, Object.class);
-      return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
-    } catch (JsonProcessingException e) {
-      throw new TransformationException(e.getMessage(), e);
-    }
   }
 
   /**
@@ -98,42 +76,39 @@ public class Cda2FhirTransformer {
    * @throws InvalidCdaException if the input string is not a valid CDA document
    */
   public String transformCdaToIps(String cdaString) {
-    InputStream inputStream = new ByteArrayInputStream(cdaString.getBytes(StandardCharsets.UTF_8));
-
-    try {
-      ContinuityOfCareDocument cda =
-          (ContinuityOfCareDocument)
-              CDAUtil.loadAs(inputStream, ConsolPackage.eINSTANCE.getContinuityOfCareDocument());
-
-      String result = transformToIps(cda);
-      Object json = objectMapper.readValue(result, Object.class);
-      return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
-
-    } catch (JsonProcessingException e) {
-      throw new TransformationException(e.getMessage(), e.getCause());
-    } catch (Exception e) {
-      throw new InvalidCdaException(e.getMessage(), e.getCause());
-    }
+    return transformCdaToIps(parseXmlToCda(cdaString));
   }
 
-  public String transformToIps(ContinuityOfCareDocument cda) {
+  /**
+   * Transforms a ContinuityOfCareDocument object into a FHIR IPS JSON string.
+   *
+   * <p>This method takes a pre-parsed CDA document as input and transforms it into a FHIR IPS JSON
+   * string using Freemarker templates.
+   *
+   * @param cda the ContinuityOfCareDocument to transform
+   * @return a formatted JSON string representing the FHIR IPS
+   * @throws TransformationException if there is an error during the transformation process
+   */
+  public String transformCdaToIps(ContinuityOfCareDocument cda) {
     try {
-      FhirContext fhirContext = FhirContext.forR4Cached();
       String mxdeString = mxdeTransform(cda);
       IParser jsonParser = fhirContext.newJsonParser();
       Bundle mxdeBundle = jsonParser.parseResource(Bundle.class, mxdeString);
 
       MyIpsGenerator myIpsGenerator = new MyIpsGenerator(fhirContext, mxdeBundle);
-
       IBaseBundle ipsBundle = myIpsGenerator.generateIps();
+
       return jsonParser.encodeResourceToString(ipsBundle);
     } catch (Exception e) {
-      throw new InvalidCdaException(e.getMessage(), e);
+      throw new TransformationException(e.getMessage(), e);
     }
   }
 
-  public String mxdeTransform(ContinuityOfCareDocument cda) {
+  public String mxdeTransform(String cdaString) {
+    return mxdeTransform(parseXmlToCda(cdaString));
+  }
 
+  public String mxdeTransform(ContinuityOfCareDocument cda) {
     try {
       String fhirBundleString = transform(cda);
       Bundle fhirBundle = parseJsonToBundle(fhirBundleString);
@@ -146,9 +121,15 @@ public class Cda2FhirTransformer {
       Template template = freemarkerConfig.getTemplate("mxde_bundle.ftl");
       StringWriter writer = new StringWriter();
       template.process(dataModel, writer);
-      return writer.toString();
+      String mxdeBundleJson = writer.toString();
+
+      // Validate JSON
+      IParser fhirJsonParser = fhirContext.newJsonParser();
+      Bundle mxdeBundle = fhirJsonParser.parseResource(Bundle.class, mxdeBundleJson);
+
+      return fhirJsonParser.encodeResourceToString(mxdeBundle);
     } catch (Exception e) {
-      throw new InvalidCdaException(e.getMessage(), e);
+      throw new TransformationException(e.getMessage(), e);
     }
   }
 
@@ -163,15 +144,12 @@ public class Cda2FhirTransformer {
    * @throws InvalidCdaException if there is an error processing the CDA document
    * @throws TransformationException if there is an error during the transformation process
    */
+  @SneakyThrows
   private String transform(ContinuityOfCareDocument cda) {
     if (log.isDebugEnabled()) {
-      try {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        CDAUtil.save(cda, byteArrayOutputStream);
-        log.debug("Incoming CDA:{}", byteArrayOutputStream.toString(StandardCharsets.UTF_8));
-      } catch (Exception e) {
-        throw new InvalidCdaException(e.getMessage(), e);
-      }
+      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      CDAUtil.save(cda, byteArrayOutputStream);
+      log.debug("Incoming CDA:{}", byteArrayOutputStream.toString(StandardCharsets.UTF_8));
     }
 
     Map<String, Object> dataModel = new HashMap<>();
@@ -183,18 +161,14 @@ public class Cda2FhirTransformer {
     addOrganizationAddress(dataModel, cda);
     addPractitionerAddress(dataModel, cda);
 
-    try {
-      Template template = freemarkerConfig.getTemplate("fhir_bundle.ftl");
-      StringWriter writer = new StringWriter();
-      template.process(dataModel, writer);
+    Template template = freemarkerConfig.getTemplate("fhir_bundle.ftl");
+    StringWriter writer = new StringWriter();
+    template.process(dataModel, writer);
 
-      return writer.toString();
-    } catch (Exception e) {
-      throw new TransformationException(e.getMessage(), e.getCause());
-    }
+    return writer.toString();
   }
 
-  public String constructProvenance(Bundle fhirBundle) throws Exception {
+  private String constructProvenance(Bundle fhirBundle) throws Exception {
     Map<String, Object> dataModel = new HashMap<>();
     dataModel.put("fhirBundle", fhirBundle);
 
@@ -202,8 +176,7 @@ public class Cda2FhirTransformer {
     StringWriter writer = new StringWriter();
     template.process(dataModel, writer);
 
-    Object json = objectMapper.readValue(writer.toString(), Object.class);
-    return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+    return writer.toString();
   }
 
   /**
@@ -218,7 +191,6 @@ public class Cda2FhirTransformer {
   }
 
   private List<Map<String, Object>> getEntries(Bundle fhirBundle) {
-    FhirContext fhirContext = FhirContext.forR4Cached();
     IParser jsonParser = fhirContext.newJsonParser();
 
     List<Map<String, Object>> resourceEntries = new ArrayList<>();
@@ -476,10 +448,21 @@ public class Cda2FhirTransformer {
   }
 
   private Bundle parseJsonToBundle(String jsonString) {
-
     FhirContext fhirContext = FhirContext.forR4Cached();
     IParser jsonParser = fhirContext.newJsonParser();
 
     return jsonParser.parseResource(Bundle.class, jsonString);
+  }
+
+  private ContinuityOfCareDocument parseXmlToCda(String xmlString) {
+    try {
+      InputStream inputStream =
+          new ByteArrayInputStream(xmlString.getBytes(StandardCharsets.UTF_8));
+
+      return (ContinuityOfCareDocument)
+          CDAUtil.loadAs(inputStream, ConsolPackage.eINSTANCE.getContinuityOfCareDocument());
+    } catch (Exception e) {
+      throw new InvalidCdaException(e.getMessage(), e);
+    }
   }
 }

@@ -72,11 +72,11 @@
                         "doseAndRate": [
                         {
                         "doseQuantity": {
-                        <#if (entry.getSubstanceAdministration().getDoseQuantity().getValue())?? >
-                            "value": ${(entry.getSubstanceAdministration().getDoseQuantity().getValue())!""},
+                        <#if (entry.getSubstanceAdministration().getDoseQuantity().getLow().getValue())?? >
+                            "value": ${(entry.getSubstanceAdministration().getDoseQuantity().getLow().getValue())!""},
                         </#if>
-                        <#if (entry.getSubstanceAdministration().getDoseQuantity().getUnit())?? >
-                            "unit": "${(entry.getSubstanceAdministration().getDoseQuantity().getUnit())!""}",
+                        <#if (entry.getSubstanceAdministration().getDoseQuantity().getLow().getUnit())?? >
+                            "unit": "${(entry.getSubstanceAdministration().getDoseQuantity().getLow().getUnit())!""}",
                         <#else>
                             ,
                         </#if>
