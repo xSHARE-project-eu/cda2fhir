@@ -77,8 +77,6 @@
                         </#if>
                         <#if (entry.getSubstanceAdministration().getDoseQuantity().getLow().getUnit())?? >
                             "unit": "${(entry.getSubstanceAdministration().getDoseQuantity().getLow().getUnit())!""}",
-                        <#else>
-                            ,
                         </#if>
                         "system": "http://unitsofmeasure.org/ucum.html"
                         }
