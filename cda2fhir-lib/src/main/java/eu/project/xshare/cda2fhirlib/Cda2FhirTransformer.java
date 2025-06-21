@@ -79,6 +79,10 @@ public class Cda2FhirTransformer {
     return transformCdaToIps(parseXmlToCda(cdaString));
   }
 
+  public String transformCdaToIps(InputStream cdaStream) {
+    return transformCdaToIps(parseXmlToCda(cdaStream));
+  }
+
   /**
    * Transforms a ContinuityOfCareDocument object into a FHIR IPS JSON string.
    *
@@ -102,6 +106,10 @@ public class Cda2FhirTransformer {
     } catch (Exception e) {
       throw new TransformationException(e.getMessage(), e);
     }
+  }
+
+  public String mxdeTransform(InputStream cdaStream) {
+    return mxdeTransform(parseXmlToCda(cdaStream));
   }
 
   public String mxdeTransform(String cdaString) {
@@ -452,6 +460,15 @@ public class Cda2FhirTransformer {
     IParser jsonParser = fhirContext.newJsonParser();
 
     return jsonParser.parseResource(Bundle.class, jsonString);
+  }
+
+  private ContinuityOfCareDocument parseXmlToCda(InputStream xmlStream) {
+    try {
+      return (ContinuityOfCareDocument)
+          CDAUtil.loadAs(xmlStream, ConsolPackage.eINSTANCE.getContinuityOfCareDocument());
+    } catch (Exception e) {
+      throw new InvalidCdaException(e.getMessage(), e);
+    }
   }
 
   private ContinuityOfCareDocument parseXmlToCda(String xmlString) {
