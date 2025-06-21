@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.5</version>
+        <version>3.5.0</version>
         <relativePath/>
     </parent>
 
@@ -44,13 +44,55 @@
     <properties>
         <java.version>21</java.version>
         <cda2fhir-lib.version>1.0.0</cda2fhir-lib.version>
+        <hapi-fhir.version>8.2.0</hapi-fhir.version>
+        <thymeleaf.version>3.1.2.RELEASE</thymeleaf.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.thymeleaf</groupId>
+                <artifactId>thymeleaf</artifactId>
+                <version>${thymeleaf.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>eu.project.xshare</groupId>
             <artifactId>cda2fhir-lib</artifactId>
             <version>${cda2fhir-lib.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>ca.uhn.hapi.fhir</groupId>
+                    <artifactId>hapi-fhir-jpaserver-base</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-validation</artifactId>
+            <version>${hapi-fhir.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-server</artifactId>
+            <version>${hapi-fhir.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-validation-resources-r4</artifactId>
+            <version>${hapi-fhir.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-caching-caffeine</artifactId>
+            <version>${hapi-fhir.version}</version>
         </dependency>
 
         <dependency>

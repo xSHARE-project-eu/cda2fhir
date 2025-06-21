@@ -16,7 +16,7 @@
                 <#assign resourceDocRef = entry.getResource()>
             </#if>
             {
-            "reference": "urn:uuid:${resource.getIdPart()}",
+            "reference": "${resource.getIdPart()}",
             "display": "${resource.getResourceType()}"
             }<#if entry_has_next>,</#if>
         </#list>

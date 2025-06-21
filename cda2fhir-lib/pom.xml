@@ -40,21 +40,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <freemarker.version>2.3.34</freemarker.version>
-        <hapi-fhir.version>8.0.0</hapi-fhir.version>
+        <hapi-fhir.version>8.2.0</hapi-fhir.version>
         <ipf.version>5.1-20250424</ipf.version>
         <plugin.maven-compiler.version>3.14.0</plugin.maven-compiler.version>
         <junit-jupiter.version>5.13.0-M2</junit-jupiter.version>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>ca.uhn.hapi.fhir</groupId>
-                <artifactId>hapi-fhir-base</artifactId>
-                <version>${hapi-fhir.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -71,6 +61,12 @@
 
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-base</artifactId>
+            <version>${hapi-fhir.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-structures-r4</artifactId>
             <version>${hapi-fhir.version}</version>
         </dependency>
@@ -78,7 +74,7 @@
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-jpaserver-ips</artifactId>
-            <version>8.0.0</version>
+            <version>${hapi-fhir.version}</version>
         </dependency>
 
         <dependency>
